@@ -287,7 +287,9 @@ def search_caregiver_schedule(tokens):
                 print("No caregiver is available on that day!")
                 return
             vaccines = get_vaccine()
+            print(f"Available caregivers on {date}:")
             print(available_caregiver)
+            print("Vaccine availability:")
             print(vaccines)
         except:
             print("Search Caregivers' Schedule Failed")
@@ -343,7 +345,8 @@ def delete_availability(date, name):
         # you must call commit() to persist your data if you don't set autocommit to True
         conn.commit()
     except pymssql.Error:
-        print("Error occurred when delete availability")
+        conn.rollback()
+        print("Error occurred when deleting caregiver availability")
         cm.close_connection()
         return
     cm.close_connection()
@@ -367,6 +370,7 @@ def add_availability(date, name):
         # you must call commit() to persist your data if you don't set autocommit to True
         conn.commit()
     except pymssql.Error:
+        conn.rollback()
         print("Error occurred when updating caregiver availability")
         cm.close_connection()
     cm.close_connection()
@@ -453,6 +457,7 @@ def reserve(tokens):
     if check_appointment_date(pname, date):
         return
 
+    # reserve
     try:
         assigned_caregiver = random.choice(available_caregiver)  # randomly assign a caregiver
         appointment_id = random.randint(1000, 9999)  # randomly assign a 4-digit integer as the appointment ID
@@ -465,6 +470,9 @@ def reserve(tokens):
         conn = cm.create_connection()
         cursor = conn.cursor(as_dict=True)
 
+        # update the caregiver's availability
+        delete_availability(d, assigned_caregiver)
+
         # decrease the vaccine dose
         vaccine = Vaccine(vaccine_name=vname, available_doses=vaccines[vname]).get()
         vaccine.decrease_available_doses(num=1)
@@ -476,12 +484,10 @@ def reserve(tokens):
             # you must call commit() to persist your data if you don't set autocommit to True
             conn.commit()
         except pymssql.Error:
+            conn.rollback()
             print("Error occurred when inserting appointment")
             cm.close_connection()
         cm.close_connection()
-
-        # update the caregiver's availability
-        delete_availability(d, assigned_caregiver)
 
         print("Reservation success!")
         print(f"Your caregiver is {assigned_caregiver}, your appointment ID is {appointment_id}")
@@ -598,6 +604,7 @@ def cancel(tokens):
                         date = row["Time"]
                     add_availability(date, assigned_caregiver)
                 except:
+                    conn.rollback()
                     print("Error occurred when updating availability")
                     cm.close_connection()
                     return
@@ -610,6 +617,7 @@ def cancel(tokens):
                         vname = row["Vname"]
                     vaccines = get_vaccine()
                 except pymssql.Error:
+                    conn.rollback()
                     print("Error occurred when deleting appointments")
                     cm.close_connection()
                     return
@@ -624,6 +632,7 @@ def cancel(tokens):
                     # you must call commit() to persist your data if you don't set autocommit to True
                     conn.commit()
                 except pymssql.Error:
+                    conn.rollback()
                     print("Error occurred when deleting appointments")
                     cm.close_connection()
                     return
@@ -651,6 +660,7 @@ def cancel(tokens):
                         date = row["Time"]
                     add_availability(date, assigned_caregiver)
                 except:
+                    conn.rollback()
                     print("Error occurred when updating availability")
                     cm.close_connection()
                     return
@@ -663,6 +673,7 @@ def cancel(tokens):
                         vname = row["Vname"]
                     vaccines = get_vaccine()
                 except pymssql.Error:
+                    conn.rollback()
                     print("Error occurred when deleting appointments")
                     cm.close_connection()
                     return
@@ -677,6 +688,7 @@ def cancel(tokens):
                     # you must call commit() to persist your data if you don't set autocommit to True
                     conn.commit()
                 except pymssql.Error:
+                    conn.rollback()
                     print("Error occurred when deleting appointments")
                     cm.close_connection()
                     return
