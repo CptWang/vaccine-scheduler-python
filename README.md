@@ -1,5 +1,7 @@
 # Python Application for Vaccine Scheduler
 
+This is a command-line based tool to manage a vaccination appointment system, which connects to a database deployed on Microsoft Azure. One can use this tool to interact with the database by creating users, getting schedules, making or canceling reservations, etc. Feel free to comment, raise issues or report bugs.
+
 ## Installation
 
 1. Clone this repository
